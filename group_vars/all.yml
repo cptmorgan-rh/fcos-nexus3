@@ -1,0 +1,25 @@
+config:
+  installer_ssh_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+vcenter:
+  ip: vcenter.example.com
+  datastore: ds0
+  network: 10.0.0.x-24
+  admin_username: administrator@vsphere.local
+  admin_password: Password1!
+  datacenter: LAB
+  folder_absolute_path: /LAB/vm/
+  vm_power_state: poweredon
+download:
+  fcos_stream: stable
+  govc: https://github.com/vmware/govmomi/releases/download/v0.23.0/govc_linux_amd64.gz
+nexus_vm:
+  name: nexus
+  ipaddr: 10.0.0.101
+  gateway: 10.0.0.1
+  netmask: 255.255.255.0
+  dns: 10.0.0.1
+  network_interface_name: ens192
+  tag: latest
+  num_cpus: 4
+  memory_mb: 8192
+  disk_gb: 16

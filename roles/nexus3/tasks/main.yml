@@ -1,0 +1,57 @@
+---
+
+- name: Delete nexus vm if redeploy defined
+  command: "govc vm.destroy {{ nexus_vm.name }}" # noqa 301
+  when: redeploy is defined
+
+- name: Create Temp Build Directory for nexus
+  tempfile:
+    state: directory
+    suffix: nexus
+  register: nexus_tempdir
+
+- name: Create nexus.ign in "{{ nexus_tempdir.path }}"/
+  template:
+    src: templates/nexus.ign.j2
+    dest: "{{ nexus_tempdir.path }}/nexus.ign"
+    mode: 0664
+
+- name: Set nexus_ign Fact
+  set_fact:
+    nexus_ign: "{{ lookup('file', '{{ nexus_tempdir.path }}/nexus.ign') | b64encode }}" # noqa 207
+
+- name: Create nexus VMs from the template
+  vmware_guest:
+    hostname: "{{ vcenter.ip }}"
+    username: "{{ vcenter.admin_username }}"
+    password: "{{ vcenter.admin_password }}"
+    datacenter: "{{ vcenter.datacenter }}"
+    validate_certs: no
+    folder: "{{ vcenter.folder_absolute_path }}"
+    name: "{{ nexus_vm.name }}"
+    state: "{{ vcenter.vm_power_state }}"
+    template: "FCOS-{{ template_name }}"
+    disk:
+    - size_gb: "{{ nexus_vm.disk_gb }}"
+      type: thin
+      datastore: "{{ vcenter.datastore }}"
+    hardware:
+      memory_mb: "{{ nexus_vm.memory_mb }}"
+      num_cpus: "{{ nexus_vm.num_cpus }}"
+      memory_reservation_lock: True
+    networks:
+    - name: "{{ vcenter.network }}"
+    wait_for_ip_address: no
+    customvalues:
+     - key: guestinfo.ignition.config.data
+       value: "{{ nexus_ign }}"
+     - key: guestinfo.ignition.config.data.encoding
+       value: base64
+     - key: guestinfo.afterburn.initrd.network-kargs
+       value: "ip={{ nexus_vm.ipaddr }}::{{ nexus_vm.gateway }}:{{ nexus_vm.netmask }}:{{ nexus_vm.name }}:ens192:off:{{ nexus_vm.dns }}" # noqa 204
+
+- name: Remove {{ nexus_tempdir.path }} and contents
+  file:
+    path: "{{ nexus_tempdir.path }}"
+    state: absent
+  when: nexus_tempdir.path is defined
