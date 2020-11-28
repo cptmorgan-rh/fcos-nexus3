@@ -10,15 +10,18 @@
     suffix: nexus
   register: nexus_tempdir
 
-- name: Create nexus.ign in "{{ nexus_tempdir.path }}"/
+- name: Create nexus.fcc in "{{ nexus_tempdir.path }}"
   template:
-    src: templates/nexus.ign.j2
-    dest: "{{ nexus_tempdir.path }}/nexus.ign"
+    src: nexus.fcc.j2
+    dest: "{{ nexus_tempdir.path }}/nexus.fcc"
     mode: 0664
+
+- name: Create CoreDNS transpiled ignition file
+  shell: "{{ playbook_dir }}/bin/fcct -d {{ nexus_tempdir.path }} --pretty --strict < {{ nexus_tempdir.path }}/nexus.fcc > {{ nexus_tempdir.path }}/transpiled_config.ign" # noqa 301
 
 - name: Set nexus_ign Fact
   set_fact:
-    nexus_ign: "{{ lookup('file', '{{ nexus_tempdir.path }}/nexus.ign') | b64encode }}" # noqa 207
+    nexus_ign: "{{ lookup('file', '{{ nexus_tempdir.path }}/transpiled_config.ign') | b64encode }}" # noqa 207
 
 - name: Create nexus VMs from the template
   vmware_guest:
