@@ -16,7 +16,7 @@
     dest: "{{ nexus_tempdir.path }}/nexus.fcc"
     mode: 0664
 
-- name: Create CoreDNS transpiled ignition file
+- name: Create Nexus transpiled ignition file
   shell: "{{ playbook_dir }}/bin/fcct -d {{ nexus_tempdir.path }} --pretty --strict < {{ nexus_tempdir.path }}/nexus.fcc > {{ nexus_tempdir.path }}/transpiled_config.ign" # noqa 301
 
 - name: Set nexus_ign Fact
