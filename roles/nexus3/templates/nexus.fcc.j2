@@ -1,0 +1,42 @@
+variant: fcos
+version: 1.1.0
+passwd:
+  users:
+  - name: core
+    ssh_authorized_keys:
+      - "{{ config.installer_ssh_key }}"
+storage:
+  directories:
+  - path: /srv/nexus
+    group:
+      id: 200
+    user:
+      id: 200
+  - path: /srv/nexus/data
+    group:
+      id: 200
+    user:
+      id: 200
+systemd:
+  units:
+    - name: nexus.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=nexus
+        After=network-online.target
+        Wants=network-online.target
+        [Service]
+        TimeoutStartSec=0
+        ExecStartPre=-/bin/podman kill nexus
+        ExecStartPre=-/bin/podman rm nexus
+        ExecStartPre=/bin/podman pull sonatype/nexus3:{{ nexus_vm.tag }}
+        ExecStart=/bin/podman run \
+          --privileged \
+          --net=host \
+          --name nexus \
+          --restart always \
+          --volume /srv/nexus/data:/nexus-data \
+          sonatype/nexus3:{{ nexus_vm.tag }}
+        [Install]
+        WantedBy=multi-user.target
