@@ -10,7 +10,7 @@
     suffix: nexus
   register: nexus_tempdir
 
-- name: "Create nexus.fcc in {{ nexus_tempdir.path }}"
+- name: Create nexus.fcc in "{{ nexus_tempdir.path }}"
   template:
     src: nexus.fcc.j2
     dest: "{{ nexus_tempdir.path }}/nexus.fcc"
@@ -53,7 +53,7 @@
      - key: guestinfo.afterburn.initrd.network-kargs
        value: "ip={{ nexus_vm.ipaddr }}::{{ nexus_vm.gateway }}:{{ nexus_vm.netmask }}:{{ nexus_vm.name }}:ens192:off:{{ nexus_vm.dns }}" # noqa 204
 
-- name: "Remove {{ nexus_tempdir.path }} and contents"
+- name: Remove {{ nexus_tempdir.path }} and contents
   file:
     path: "{{ nexus_tempdir.path }}"
     state: absent
